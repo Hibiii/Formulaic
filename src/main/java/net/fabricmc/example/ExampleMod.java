@@ -10,11 +10,13 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
 public class ExampleMod implements ModInitializer {
+
+	public static final Identifier CAR_SPAWN_PACKET = new Identifier("formulaic","spawn");
 	
 	public static final EntityType<PrototypeCarEntity> PROTOTYPE_CAR = Registry.register(
 			Registry.ENTITY_TYPE, 
 			new Identifier("formulaic", "prototype_car"),
-			FabricEntityTypeBuilder.create(SpawnGroup.MISC, PrototypeCarEntity::new).dimensions(EntityDimensions.fixed(1.7f, 1.3f)).build());
+			FabricEntityTypeBuilder.<PrototypeCarEntity>create(SpawnGroup.MISC, PrototypeCarEntity::new).dimensions(EntityDimensions.fixed(1.7f, 1.3f)).build());
 	
 	@Override
 	public void onInitialize() {
