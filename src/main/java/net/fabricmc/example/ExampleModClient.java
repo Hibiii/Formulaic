@@ -11,7 +11,8 @@ import net.minecraft.client.MinecraftClient;
 
 @Environment(EnvType.CLIENT)
 public class ExampleModClient implements ClientModInitializer {
- 
+
+	private static MinecraftClient client = MinecraftClient.getInstance();
     @Override
     public void onInitializeClient() {
         EntityRendererRegistry.INSTANCE.register(ExampleMod.PROTOTYPE_CAR, (dispatcher, context) -> {
@@ -25,7 +26,8 @@ public class ExampleModClient implements ClientModInitializer {
         	int entityId = packet.readInt();
         	UUID entityUuid = packet.readUuid();
         	context.getTaskQueue().execute(() -> {
-        		PrototypeCarEntity car = new PrototypeCarEntity(MinecraftClient.getInstance().world, x, y, z, entityId, entityUuid);
+        		PrototypeCarEntity car = new PrototypeCarEntity(client.world, x, y, z, entityId, entityUuid);
+        		client.world.addEntity(entityId, car);
         	});
         });
     }

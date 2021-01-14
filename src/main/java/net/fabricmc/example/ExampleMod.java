@@ -11,7 +11,7 @@ import net.minecraft.util.registry.Registry;
 
 public class ExampleMod implements ModInitializer {
 
-	public static final Identifier CAR_SPAWN_PACKET = new Identifier("formulaic","spawn");
+	public static final Identifier CAR_SPAWN_PACKET = new Identifier("formulaic");
 	
 	public static final EntityType<PrototypeCarEntity> PROTOTYPE_CAR = Registry.register(
 			Registry.ENTITY_TYPE, 

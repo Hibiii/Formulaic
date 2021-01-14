@@ -25,6 +25,7 @@ public class PrototypeCarEntity extends Entity {
 	public PrototypeCarEntity(World world, double x, double y, double z, int id, UUID uuid) {
 		super(ExampleMod.PROTOTYPE_CAR, world);
 		updatePosition(x, y, z);
+		updateTrackedPosition(x, y, z);
 		setEntityId(id);
 		setUuid(uuid);
 	}
@@ -40,6 +41,13 @@ public class PrototypeCarEntity extends Entity {
 		return ServerSidePacketRegistry.INSTANCE.toPacket(ExampleMod.CAR_SPAWN_PACKET, packet);
 	}
 
+	@Override
+	public void tick() {
+		this.setVelocity(this.getVelocity().add(0.0, -0.04, 0.0));
+		this.updatePosition(this.getX() + this.getVelocity().x, this.getY()+this.getVelocity().y, this.getZ() + this.getVelocity().z);
+		super.tick();
+	}
+	
 	@Override
 	protected void initDataTracker() {
 		// TODO Auto-generated method stub
