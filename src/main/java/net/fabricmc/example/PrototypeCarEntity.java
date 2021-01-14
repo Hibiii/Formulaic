@@ -9,15 +9,21 @@ import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.MovementType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
 public class PrototypeCarEntity extends Entity {
 
 	public PrototypeCarEntity(EntityType<?> type, World world) {
 		super(type, world);
+		this.inanimate = true;
 		// TODO Auto-generated constructor stub
 	}
 	
@@ -43,9 +49,47 @@ public class PrototypeCarEntity extends Entity {
 
 	@Override
 	public void tick() {
-		this.setVelocity(this.getVelocity().add(0.0, -0.04, 0.0));
-		this.updatePosition(this.getX() + this.getVelocity().x, this.getY()+this.getVelocity().y, this.getZ() + this.getVelocity().z);
 		super.tick();
+		this.setVelocity(this.getVelocity().add(0.0, -0.04, 0.0));
+		this.move(MovementType.SELF, this.getVelocity());
+		this.checkBlockCollision();
+	}
+	
+	// code taken directly from minecart code is :concern:ing
+	// !!! XXX TODO !!! CONSIDER REDOING THIS !!! XXX !!!
+	@Override
+    public ActionResult interact(PlayerEntity player, Hand hand) {
+        if (player.shouldCancelInteraction()) {
+            return ActionResult.PASS;
+        }
+        if (this.hasPassengers()) {
+            return ActionResult.PASS;
+        }
+        if (!this.world.isClient) {
+            return player.startRiding(this) ? ActionResult.CONSUME : ActionResult.PASS;
+        }
+        return ActionResult.SUCCESS;
+    }
+	
+	@Override
+	public boolean canClimb() {
+		return false;
+	}
+	
+	@Override
+	public boolean isPushable() {
+		return true;
+	}
+	
+	@Override
+	public boolean collides() {
+		return !this.removed;
+	}
+	
+	@Environment(EnvType.CLIENT)
+	@Override
+	public Box getVisibilityBoundingBox() {
+		return this.getBoundingBox();
 	}
 	
 	@Override
