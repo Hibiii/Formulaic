@@ -22,16 +22,16 @@ public class PrototypeCarEntityRenderer extends EntityRenderer<PrototypeCarEntit
     }
     @Override
     public Identifier getTexture(PrototypeCarEntity entity) {
-        return new Identifier("minecraft", "textures/block/stone.png");
+        return new Identifier("modid", "textures/entity/prototype_car.png");
     }
     public static void register() {
         EntityRendererRegistry.INSTANCE.register(ExampleMod.PROTOTYPE_CAR,(entityRenderDispatcher,context)->new PrototypeCarEntityRenderer(entityRenderDispatcher));
     }
     public void render(PrototypeCarEntity prototypeCarEntity, float yaw, float delta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i) {
-    	matrixStack.push();
-    	VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(model.getLayer(new Identifier("minecraft", "textures/block/stone.png")));
+    	//matrixStack.push();
+    	VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(model.getLayer(new Identifier("modid", "textures/entity/prototype_car.png")));
     	model.render(matrixStack, vertexConsumer, i, OverlayTexture.DEFAULT_UV, 1.0f, 1.0f, 1.0f, 1.0f);
-    	matrixStack.pop();
+    	//matrixStack.pop();
     	super.render(prototypeCarEntity, yaw, delta, matrixStack, vertexConsumerProvider, i);
     }
     @Override

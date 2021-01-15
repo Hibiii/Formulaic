@@ -78,8 +78,13 @@ public class PrototypeCarEntity extends Entity {
 	
 	@Override
 	public boolean isPushable() {
-		return true;
+		return false;
 	}
+	
+	@Override
+    public double getMountedHeightOffset() {
+        return -0.07;
+    }
 	
 	@Override
 	public boolean collides() {

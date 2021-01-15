@@ -16,7 +16,7 @@ public class ExampleMod implements ModInitializer {
 	public static final EntityType<PrototypeCarEntity> PROTOTYPE_CAR = Registry.register(
 			Registry.ENTITY_TYPE, 
 			new Identifier("formulaic", "prototype_car"),
-			FabricEntityTypeBuilder.<PrototypeCarEntity>create(SpawnGroup.MISC, PrototypeCarEntity::new).dimensions(EntityDimensions.fixed(1.7f, 1.3f)).trackRangeBlocks(8).build());
+			FabricEntityTypeBuilder.<PrototypeCarEntity>create(SpawnGroup.MISC, PrototypeCarEntity::new).dimensions(EntityDimensions.fixed(1.9f, 1.0f)).trackRangeBlocks(8).build());
 	
 	@Override
 	public void onInitialize() {
