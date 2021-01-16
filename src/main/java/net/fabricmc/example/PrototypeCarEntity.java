@@ -24,8 +24,11 @@ import net.minecraft.world.World;
 
 public class PrototypeCarEntity extends Entity {
 
+	private double x, y, z;
 	private boolean w, a, s, d;
 	private float velocityDecay;
+	private int posInterpolationSteps;
+	private float carYaw;
 	
 	public PrototypeCarEntity(EntityType<?> type, World world) {
 		super(type, world);
@@ -56,6 +59,7 @@ public class PrototypeCarEntity extends Entity {
 	@Override
 	public void tick() {
 		super.tick();
+        this.posInterpolation();
 		if (this.isLogicalSideForUpdatingMovement()) {
             this.updateVelocity();
             if (this.world.isClient) {
@@ -132,6 +136,15 @@ public class PrototypeCarEntity extends Entity {
         return true;
     }
 
+    @Environment(EnvType.CLIENT)
+    public void updateTrackedPositionAndAngles(double x, double y, double z, float yaw, float pitch, int interpolationSteps, boolean interpolate) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.carYaw = yaw;
+        this.posInterpolationSteps = 10;
+    }
+    
 	public void setInputs(boolean pressingLeft, boolean pressingRight, boolean pressingForward, boolean pressingBack) {
 		w = pressingForward;
 		a = pressingLeft;
@@ -169,5 +182,24 @@ public class PrototypeCarEntity extends Entity {
             this.setVelocity(this.getVelocity().add((MathHelper.sin(-this.yaw * 0.017453292F) * f), 0.0D, (MathHelper.cos(this.yaw * 0.017453292F) * f)));
 		}
 	}
+	
+	private void posInterpolation() {
+        if (this.isLogicalSideForUpdatingMovement()) {
+            this.posInterpolationSteps = 0;
+            this.updateTrackedPosition(this.getX(), this.getY(), this.getZ());
+        }
+
+        if (this.posInterpolationSteps > 0) {
+            double d = this.getX() + (this.x - this.getX()) / (double)this.posInterpolationSteps;
+            double e = this.getY() + (this.y - this.getY()) / (double)this.posInterpolationSteps;
+            double f = this.getZ() + (this.z - this.getZ()) / (double)this.posInterpolationSteps;
+            double g = MathHelper.wrapDegrees(this.carYaw - (double)this.yaw);
+            this.yaw = (float)((double)this.yaw + g / (double)this.posInterpolationSteps);
+            this.pitch = 0;
+            --this.posInterpolationSteps;
+            this.updatePosition(d, e, f);
+            this.setRotation(this.yaw, this.pitch);
+        }
+    }
 
 }
