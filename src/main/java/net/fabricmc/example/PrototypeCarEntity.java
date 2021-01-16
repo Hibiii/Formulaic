@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MovementType;
@@ -17,10 +18,15 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class PrototypeCarEntity extends Entity {
 
+	private boolean w, a, s, d;
+	private float velocityDecay;
+	
 	public PrototypeCarEntity(EntityType<?> type, World world) {
 		super(type, world);
 		this.inanimate = true;
@@ -50,13 +56,18 @@ public class PrototypeCarEntity extends Entity {
 	@Override
 	public void tick() {
 		super.tick();
-		this.setVelocity(this.getVelocity().add(0.0, -0.04, 0.0));
-		this.move(MovementType.SELF, this.getVelocity());
+		if (this.isLogicalSideForUpdatingMovement()) {
+            this.updateVelocity();
+            if (this.world.isClient) {
+                this.updateMovement();
+            }
+            this.move(MovementType.SELF, this.getVelocity());
+        } else {
+            this.setVelocity(Vec3d.ZERO);
+		}
 		this.checkBlockCollision();
 	}
 	
-	// code taken directly from minecart code is :concern:ing
-	// !!! XXX TODO !!! CONSIDER REDOING THIS !!! XXX !!!
 	@Override
     public ActionResult interact(PlayerEntity player, Hand hand) {
         if (player.shouldCancelInteraction()) {
@@ -78,7 +89,7 @@ public class PrototypeCarEntity extends Entity {
 	
 	@Override
 	public boolean isPushable() {
-		return false;
+		return true;
 	}
 	
 	@Override
@@ -120,5 +131,43 @@ public class PrototypeCarEntity extends Entity {
     public boolean shouldRender(double distance) {
         return true;
     }
+
+	public void setInputs(boolean pressingLeft, boolean pressingRight, boolean pressingForward, boolean pressingBack) {
+		w = pressingForward;
+		a = pressingLeft;
+		s = pressingBack;
+		d = pressingRight;
+	}
+	
+	private void updateVelocity() {
+		double e = this.hasNoGravity() ? 0.0D : -0.03999999910593033D;
+    double f = 0.0D;
+    f = 0.009999999776482582D;
+        velocityDecay *= 0.95F;
+
+    if (this.getPassengerList().size() < 2) {
+        velocityDecay /= 1.15F;
+    }
+
+    Vec3d vec3d = this.getVelocity();
+    this.setVelocity(vec3d.x * (double) velocityDecay, vec3d.y + e, vec3d.z * (double) velocityDecay);
+    if (f > 0.0D) {
+        Vec3d vec3d2 = this.getVelocity();
+        this.setVelocity(vec3d2.x, (vec3d2.y + f * 0.06153846016296973D) * 0.75D, vec3d2.z);
+    }
+}
+	
+	private void updateMovement() {
+		if (this.hasPassengers()) {
+			float f = 0.0f;
+			if (this.w) {
+                f += 0.04F;
+            }
+            if (this.s) {
+                f -= 0.005F;
+            }
+            this.setVelocity(this.getVelocity().add((MathHelper.sin(-this.yaw * 0.017453292F) * f), 0.0D, (MathHelper.cos(this.yaw * 0.017453292F) * f)));
+		}
+	}
 
 }

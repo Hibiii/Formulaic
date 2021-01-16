@@ -6,7 +6,8 @@
   "mixins": [
   ],
   "client": [
-    "ExampleMixin"
+    "ExampleMixin",
+    "PlayerControlCarMixin"
   ],
   "injectors": {
     "defaultRequire": 1
