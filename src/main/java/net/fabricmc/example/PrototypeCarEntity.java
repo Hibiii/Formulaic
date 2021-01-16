@@ -3,7 +3,10 @@ package net.fabricmc.example;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
 
+import java.util.List;
 import java.util.UUID;
+
+import org.jetbrains.annotations.Nullable;
 
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
@@ -29,6 +32,7 @@ public class PrototypeCarEntity extends Entity {
 	private float velocityDecay;
 	private int posInterpolationSteps;
 	private float carYaw;
+	private float yawVelocity;
 	
 	public PrototypeCarEntity(EntityType<?> type, World world) {
 		super(type, world);
@@ -60,16 +64,10 @@ public class PrototypeCarEntity extends Entity {
 	public void tick() {
 		super.tick();
         this.posInterpolation();
-		if (this.isLogicalSideForUpdatingMovement()) {
             this.updateVelocity();
-            if (this.world.isClient) {
                 this.updateMovement();
-            }
             this.move(MovementType.SELF, this.getVelocity());
-        } else {
-            this.setVelocity(Vec3d.ZERO);
-		}
-		this.checkBlockCollision();
+        this.checkBlockCollision();
 	}
 	
 	@Override
@@ -131,6 +129,13 @@ public class PrototypeCarEntity extends Entity {
 	}
 	
 	@Override
+    @Nullable
+    public Entity getPrimaryPassenger() {
+        List<Entity> list = this.getPassengerList();
+        return list.isEmpty() ? null : list.get(0);
+	}
+	
+	@Override
     @Environment(EnvType.CLIENT)
     public boolean shouldRender(double distance) {
         return true;
@@ -153,35 +158,44 @@ public class PrototypeCarEntity extends Entity {
 	}
 	
 	private void updateVelocity() {
-		double e = this.hasNoGravity() ? 0.0D : -0.03999999910593033D;
-    double f = 0.0D;
-    f = 0.009999999776482582D;
-        velocityDecay *= 0.95F;
-
-    if (this.getPassengerList().size() < 2) {
-        velocityDecay /= 1.15F;
-    }
-
-    Vec3d vec3d = this.getVelocity();
-    this.setVelocity(vec3d.x * (double) velocityDecay, vec3d.y + e, vec3d.z * (double) velocityDecay);
-    if (f > 0.0D) {
-        Vec3d vec3d2 = this.getVelocity();
-        this.setVelocity(vec3d2.x, (vec3d2.y + f * 0.06153846016296973D) * 0.75D, vec3d2.z);
-    }
+        double double2 = -0.03999999910593033;
+        double double4 = this.hasNoGravity() ? 0.0 : -0.03999999910593033;
+        double double6 = 0.0;
+        this.velocityDecay = 0.05f;
+                double6 = 0.009999999776482582;
+                this.velocityDecay = 0.45f;
+            Vec3d vec3d8 = this.getVelocity();
+            this.setVelocity(vec3d8.x * this.velocityDecay, vec3d8.y + double4, vec3d8.z * this.velocityDecay);
+            this.yawVelocity *= this.velocityDecay;
+            if (double6 > 0.0) {
+                Vec3d vec3d9 = this.getVelocity();
+                this.setVelocity(vec3d9.x, (vec3d9.y + double6 * 0.06153846016296973) * 0.75, vec3d9.z);
+            }
 }
 	
-	private void updateMovement() {
-		if (this.hasPassengers()) {
-			float f = 0.0f;
-			if (this.w) {
-                f += 0.04F;
-            }
-            if (this.s) {
-                f -= 0.005F;
-            }
-            this.setVelocity(this.getVelocity().add((MathHelper.sin(-this.yaw * 0.017453292F) * f), 0.0D, (MathHelper.cos(this.yaw * 0.017453292F) * f)));
-		}
-	}
+	 private void updateMovement() {
+	        if (!this.hasPassengers()) {
+	            return;
+	        }
+	        float float2 = 0.0f;
+	        if (this.a) {
+	            --this.yawVelocity;
+	        }
+	        if (this.d) {
+	            ++this.yawVelocity;
+	        }
+	        if (this.d != this.a && !this.w && !this.s) {
+	            float2 += 0.005f;
+	        }
+	        this.yaw += this.yawVelocity;
+	        if (this.w) {
+	            float2 += 0.04f;
+	        }
+	        if (this.s) {
+	            float2 -= 0.005f;
+	        }
+	        this.setVelocity(this.getVelocity().add(MathHelper.sin(-this.yaw * 0.017453292f) * float2, 0.0, MathHelper.cos(this.yaw * 0.017453292f) * float2));
+	    }
 	
 	private void posInterpolation() {
         if (this.isLogicalSideForUpdatingMovement()) {
