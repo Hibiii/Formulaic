@@ -110,7 +110,6 @@ public void setAngles(PrototypeCarEntity entity, float limbSwing, float limbSwin
 public void render(MatrixStack matrixStack, VertexConsumer	buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha){
 		matrixStack.push();
 		matrixStack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(180.0f));
-		matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180.0f));
 		matrixStack.translate(0.0, -1.5, 0.0);
 		TyreFR.render(matrixStack, buffer, packedLight, packedOverlay);
 		TyreFL.render(matrixStack, buffer, packedLight, packedOverlay);

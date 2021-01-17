@@ -8,6 +8,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
 
 public class PrototypeCarEntityRenderer extends EntityRenderer<PrototypeCarEntity> {
@@ -28,10 +29,11 @@ public class PrototypeCarEntityRenderer extends EntityRenderer<PrototypeCarEntit
         EntityRendererRegistry.INSTANCE.register(ExampleMod.PROTOTYPE_CAR,(entityRenderDispatcher,context)->new PrototypeCarEntityRenderer(entityRenderDispatcher));
     }
     public void render(PrototypeCarEntity prototypeCarEntity, float yaw, float delta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i) {
-    	//matrixStack.push();
+    	matrixStack.push();
+    	matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180.0f - yaw));
     	VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(model.getLayer(new Identifier("modid", "textures/entity/prototype_car.png")));
     	model.render(matrixStack, vertexConsumer, i, OverlayTexture.DEFAULT_UV, 1.0f, 1.0f, 1.0f, 1.0f);
-    	//matrixStack.pop();
+    	matrixStack.pop();
     	super.render(prototypeCarEntity, yaw, delta, matrixStack, vertexConsumerProvider, i);
     }
     @Override

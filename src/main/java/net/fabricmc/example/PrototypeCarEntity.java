@@ -29,10 +29,9 @@ public class PrototypeCarEntity extends Entity {
 
 	private double x, y, z;
 	private boolean w, a, s, d;
-	private float velocityDecay;
 	private int posInterpolationSteps;
 	private float carYaw;
-	private float yawVelocity;
+	private double wheelYaw;
 	
 	public PrototypeCarEntity(EntityType<?> type, World world) {
 		super(type, world);
@@ -64,10 +63,17 @@ public class PrototypeCarEntity extends Entity {
 	public void tick() {
 		super.tick();
         this.posInterpolation();
+        if(this.isLogicalSideForUpdatingMovement()) {
             this.updateVelocity();
+        	if(this.world.isClient) {
                 this.updateMovement();
+        	}
             this.move(MovementType.SELF, this.getVelocity());
+        } else {
+        	this.setVelocity(Vec3d.ZERO);
+        }
         this.checkBlockCollision();
+        this.setHeadYaw(this.yaw);
 	}
 	
 	@Override
@@ -91,7 +97,7 @@ public class PrototypeCarEntity extends Entity {
 	
 	@Override
 	public boolean isPushable() {
-		return true;
+		return false;
 	}
 	
 	@Override
@@ -158,43 +164,30 @@ public class PrototypeCarEntity extends Entity {
 	}
 	
 	private void updateVelocity() {
-        double double2 = -0.03999999910593033;
-        double double4 = this.hasNoGravity() ? 0.0 : -0.03999999910593033;
-        double double6 = 0.0;
-        this.velocityDecay = 0.05f;
-                double6 = 0.009999999776482582;
-                this.velocityDecay = 0.45f;
-            Vec3d vec3d8 = this.getVelocity();
-            this.setVelocity(vec3d8.x * this.velocityDecay, vec3d8.y + double4, vec3d8.z * this.velocityDecay);
-            this.yawVelocity *= this.velocityDecay;
-            if (double6 > 0.0) {
-                Vec3d vec3d9 = this.getVelocity();
-                this.setVelocity(vec3d9.x, (vec3d9.y + double6 * 0.06153846016296973) * 0.75, vec3d9.z);
-            }
+		// 0.00715f friction
+        this.setVelocity(this.getVelocity().multiply(0.95f, 1.0f, 0.95f).add(0.0f, -0.4f, 0.0f));
 }
 	
 	 private void updateMovement() {
 	        if (!this.hasPassengers()) {
 	            return;
 	        }
-	        float float2 = 0.0f;
-	        if (this.a) {
-	            --this.yawVelocity;
-	        }
-	        if (this.d) {
-	            ++this.yawVelocity;
-	        }
-	        if (this.d != this.a && !this.w && !this.s) {
-	            float2 += 0.005f;
-	        }
-	        this.yaw += this.yawVelocity;
-	        if (this.w) {
-	            float2 += 0.04f;
-	        }
-	        if (this.s) {
-	            float2 -= 0.005f;
-	        }
-	        this.setVelocity(this.getVelocity().add(MathHelper.sin(-this.yaw * 0.017453292f) * float2, 0.0, MathHelper.cos(this.yaw * 0.017453292f) * float2));
+	        float longitudinalInput = 0.0f;
+	        if(this.w)
+	        	longitudinalInput = 0.06f;
+	        else if(this.s)
+	        	longitudinalInput = -0.04f;
+	        if(this.a)
+	        	this.wheelYaw = -3;
+	        else if(this.d)
+		        this.wheelYaw = 3;
+	        else
+	        	this.wheelYaw = 0.0;
+	        this.yaw += wheelYaw * Math.abs(Math.cos(this.wheelYaw));
+	        this.setVelocity(this.getVelocity().add(
+	        		MathHelper.sin(-this.yaw * 0.017453292f) * longitudinalInput,
+	        		0.0,
+	        		MathHelper.cos(this.yaw * 0.017453292f) * longitudinalInput));
 	    }
 	
 	private void posInterpolation() {
