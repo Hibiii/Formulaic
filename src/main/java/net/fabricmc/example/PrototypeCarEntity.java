@@ -32,6 +32,7 @@ public class PrototypeCarEntity extends Entity {
 	private int posInterpolationSteps;
 	private float carYaw;
 	private double wheelYaw;
+	private Vec3d speed;
 	
 	public PrototypeCarEntity(EntityType<?> type, World world) {
 		super(type, world);
@@ -62,6 +63,7 @@ public class PrototypeCarEntity extends Entity {
 	@Override
 	public void tick() {
 		super.tick();
+		speed = this.getVelocity();
         this.posInterpolation();
         if(this.isLogicalSideForUpdatingMovement()) {
             this.updateVelocity();
@@ -165,7 +167,7 @@ public class PrototypeCarEntity extends Entity {
 	
 	private void updateVelocity() {
 		// 0.00715f friction
-        this.setVelocity(this.getVelocity().multiply(0.95f, 1.0f, 0.95f).add(0.0f, -0.4f, 0.0f));
+        this.setVelocity(speed = speed.multiply(0.95f, 1.0f, 0.95f).add(0.0f, -0.4f, 0.0f));
 }
 	
 	 private void updateMovement() {
@@ -184,10 +186,17 @@ public class PrototypeCarEntity extends Entity {
 	        else
 	        	this.wheelYaw = 0.0;
 	        this.yaw += wheelYaw * Math.abs(Math.cos(this.wheelYaw));
-	        this.setVelocity(this.getVelocity().add(
+	        double sidewaysFriction = 0.5 * MathHelper.cos((float) (yaw - Math.atan2(speed.getX(), -speed.getZ()))) + 0.5 ;
+	        speed = speed
+	        	.add(
 	        		MathHelper.sin(-this.yaw * 0.017453292f) * longitudinalInput,
 	        		0.0,
-	        		MathHelper.cos(this.yaw * 0.017453292f) * longitudinalInput));
+	        		MathHelper.cos(this.yaw * 0.017453292f) * longitudinalInput)
+	        	.multiply(
+	        			sidewaysFriction,
+	        			1.0,
+	        			sidewaysFriction);
+	        this.setVelocity(speed);
 	    }
 	
 	private void posInterpolation() {
