@@ -1,9 +1,13 @@
-# Fabric Example Mod
+# Formulaic
 
-## Setup
+*th e speed is a lot mate*\
+- funny car show man
 
-For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
+This mod is being actively worked on. Licensed under Unlicense.
 
-## License
+## Todo
 
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+ - Ackermann steering
+ - Pacejka tyre model
+ - and loads more
+ 
