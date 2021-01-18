@@ -3,10 +3,10 @@
   "id": "modid",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Formulaic",
+  "description": "CAR GO VROOM VROOM VROOOOOOOM",
   "authors": [
-    "Me!"
+    "Hibi"
   ],
   "contact": {
     "homepage": "https://fabricmc.net/",
@@ -14,19 +14,19 @@
   },
 
   "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
+  "icon": "assets/formulaic/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.fabricmc.example.ExampleMod"
+      "hibiii.formulaic.Formulaic"
     ],
     "client": [
-      "net.fabricmc.example.ExampleModClient"
+      "hibiii.formulaic.FormulaicClient"
     ]
   },
   "mixins": [
-    "modid.mixins.json"
+    "formulaic.mixins.json"
   ],
 
   "depends": {

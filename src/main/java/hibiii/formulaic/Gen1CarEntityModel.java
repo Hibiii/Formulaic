@@ -1,8 +1,8 @@
 // Made with Blockbench 3.7.5
-	// Exported for Minecraft version 1.15
-	// Paste this class into your mod and generate all required imports
+// Exported for Minecraft version 1.15
+// Paste this class into your mod and generate all required imports
 
-	package net.fabricmc.example;
+package hibiii.formulaic;
 
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.VertexConsumer;
@@ -10,8 +10,9 @@ import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 
-public class PrototypeCarEntityModel extends EntityModel<PrototypeCarEntity> {
-private final ModelPart TyreFR;
+public class Gen1CarEntityModel extends EntityModel<Gen1CarEntity> {
+	
+	private final ModelPart TyreFR;
 	private final ModelPart TyreFL;
 	private final ModelPart TyreRL;
 	private final ModelPart TyreRR;
@@ -23,7 +24,8 @@ private final ModelPart TyreFR;
 	private final ModelPart FrontWing;
 	private final ModelPart RearWing;
 	private final ModelPart RwWing_r1;
-public PrototypeCarEntityModel() {
+	
+	public Gen1CarEntityModel() {
 		textureWidth = 128;
 		textureHeight = 128;
 		TyreFR = new ModelPart(this);
@@ -101,13 +103,13 @@ public PrototypeCarEntityModel() {
 		RearWing.addChild(RwWing_r1);
 		setRotationAngle(RwWing_r1, 0.3927F, 0.0F, 0.0F);
 		RwWing_r1.setTextureOffset(84, 116).addCuboid(-8.0F, -0.5F, -3.0F, 16.0F, 1.0F, 6.0F, 0.0F, false);
-}
-@Override
-public void setAngles(PrototypeCarEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch){
+	}
+	@Override
+	public void setAngles(Gen1CarEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch){
 		//previously the render function, render code was moved to a method below
-}
-@Override
-public void render(MatrixStack matrixStack, VertexConsumer	buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha){
+	}
+	@Override
+	public void render(MatrixStack matrixStack, VertexConsumer	buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha){
 		matrixStack.push();
 		matrixStack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(180.0f));
 		matrixStack.translate(0.0, -1.5, 0.0);
@@ -119,11 +121,11 @@ public void render(MatrixStack matrixStack, VertexConsumer	buffer, int packedLig
 		FrontWing.render(matrixStack, buffer, packedLight, packedOverlay);
 		RearWing.render(matrixStack, buffer, packedLight, packedOverlay);
 		matrixStack.pop();
-}
-public void setRotationAngle(ModelPart bone, float x, float y, float z) {
+	}
+	public void setRotationAngle(ModelPart bone, float x, float y, float z) {
 		bone.pitch = x;
 		bone.yaw = y;
 		bone.roll = z;
-}
-
 	}
+
+}
