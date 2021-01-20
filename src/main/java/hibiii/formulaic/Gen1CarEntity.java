@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -28,13 +29,26 @@ import net.minecraft.world.World;
 public class Gen1CarEntity extends Entity {
 
 	private double x, y, z;
-	private boolean w, a, s, d;          // Input (Power, Steer Left, Brake, Steer Right)
+	private boolean w, a, s, d;            // Input (Power, Steer Left, Brake, Steer Right)
 	private int posInterpolationSteps;
 	private float carYaw;
-	private double wheelYaw;             // Front wheels' yaw
-	private Vec3d speed;                 // Avoid perf loss, don't call this.getVelocity()
+	private float wheelYaw, oldWheelYaw;   // Front wheels' yaw
+	private float torque;                  // Rear wheel torque
+	private Vec3d speed;                   // Avoid perf loss, don't call this.getVelocity()
+	private Vec3d wheelFront, wheelBack;
 
-	
+	private final static float
+		carLength = 5f,
+		carWidth = 1.7f,
+		carMass = 880f,
+		wheelbase = 3.4f,
+		wheelRadius = 0.4f,
+		torqueMaxAccel = 1f,
+		torqueMaxBrake = -1.1f,
+		momentOfInertiaCar = (carMass * (carWidth * carWidth + carLength * carLength)) / 12,
+		momentOfInertiaBack = momentOfInertiaCar + (carMass * wheelbase * wheelbase) / 4,
+		jeff = (-1 * carMass) / (2 * carLength); // -Mv²/2L from (21) and (22)
+
 	// Called on summon
 	public Gen1CarEntity(EntityType<?> type, World world) {
 		super(type, world);
@@ -76,7 +90,7 @@ public class Gen1CarEntity extends Entity {
 				// This is where the driving happens
 				this.updateMovement();
 			}
-			this.move(MovementType.SELF, this.getVelocity());
+			this.move(MovementType.SELF, speed);
 		} else {
 			this.setVelocity(Vec3d.ZERO);
 		}
@@ -174,35 +188,55 @@ public class Gen1CarEntity extends Entity {
 	}
 
 	//// This is where you drivv ////
-	// TODO: Current physics calculations are *too* slidey, do a poll maybe?
 	private void updateMovement() {
 		if (!this.hasPassengers()) {
 			return;
 		}
 		
-		// Gonna yank all of this out
-		float longitudinalInput = 0.0f;
-		if(this.w)
-			longitudinalInput = 0.06f;
-		else if(this.s)
-			longitudinalInput = -0.04f;
-		if(this.a)
-			this.wheelYaw = -3;
-		else if(this.d)
-			this.wheelYaw = 3;
+		//- Handle input -//
+		// Accel and decel
+		torque = 0;
+		if(w)
+			torque += torqueMaxAccel;
+		if(s)
+			torque += torqueMaxBrake;
+		
+		// Steering
+		oldWheelYaw = wheelYaw;
+		if(a && !d)
+			wheelYaw = 0.5f;
+		else if(d && !a)
+			wheelYaw = -0.5f;
 		else
-			this.wheelYaw = 0.0;
-		this.yaw += wheelYaw * Math.abs(Math.cos(this.wheelYaw));
-		double sidewaysFriction = 0.5 * MathHelper.cos((float) (yaw - Math.atan2(speed.getX(), -speed.getZ()))) + 0.5 ;
-		speed = speed
-				.add(
-						MathHelper.sin(-this.yaw * 0.017453292f) * longitudinalInput,
-						0.0,
-						MathHelper.cos(this.yaw * 0.017453292f) * longitudinalInput)
-				.multiply(
-						sidewaysFriction,
-						1.0,
-						sidewaysFriction);
+			wheelYaw = 0;
+		
+		// (23)
+		// XXX THIS CAN CAUSE THE CAR TO MOVE FASTER WHEN FALLING (length OF speed, A Vec3d)
+		float omega = (float) (speed.length() / wheelRadius);
+		
+		Vec3d forceCentripetalFront;
+		Vec3d forceCentripetalRear;
+		if(wheelYaw != 0) {
+			// (21)
+			forceCentripetalFront = new Vec3d (
+					jeff * speed.lengthSquared() * Math.tan(wheelYaw),
+					0,
+					jeff * speed.lengthSquared() * Math.pow(Math.tan(wheelYaw), 2));
+			// (22)
+			forceCentripetalRear = new Vec3d (
+					jeff * speed.lengthSquared() * Math.tan(wheelYaw),
+					0,
+					0);
+		} else {
+			forceCentripetalFront = Vec3d.ZERO;
+			forceCentripetalRear = Vec3d.ZERO;
+		}
+		// (33)
+		float fr = momentOfInertiaBack * (float)Math.tan(wheelYaw) / (wheelbase * wheelbase);
+		// (37)
+		float acceleration = (float) ((wheelRadius * wheelRadius * (forceCentripetalFront.length() - (fr * speed.length())/Math.pow(Math.cos(wheelYaw), 2)*((wheelYaw - oldWheelYaw)/0.05)))/(2*momentOfInertiaBack + (carMass + fr*Math.tan(wheelYaw)*wheelRadius*wheelRadius)));
+		
+		
 		this.setVelocity(speed);
 	}
 
