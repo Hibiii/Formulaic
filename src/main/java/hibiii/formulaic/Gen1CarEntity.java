@@ -192,8 +192,9 @@ public class Gen1CarEntity extends Entity {
 			this.wheelYaw = 3;
 		else
 			this.wheelYaw = 0.0;
-		this.yaw += wheelYaw * Math.abs(Math.cos(this.wheelYaw));
-		double sidewaysFriction = 0.5 * MathHelper.cos((float) (yaw - Math.atan2(speed.getX(), -speed.getZ()))) + 0.5 ;
+		if(speed.length() > 0.01)
+			this.yaw += wheelYaw * Math.abs(Math.cos(this.wheelYaw));
+		double sidewaysFriction = 0.05 * MathHelper.cos((float) (yaw - Math.atan2(speed.getX(), -speed.getZ()))) + 0.95 ;
 		speed = speed
 				.add(
 						MathHelper.sin(-this.yaw * 0.017453292f) * longitudinalInput,
