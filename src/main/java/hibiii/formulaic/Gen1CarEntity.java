@@ -21,6 +21,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -31,9 +32,22 @@ public class Gen1CarEntity extends Entity {
 	private boolean w, a, s, d;          // Input (Power, Steer Left, Brake, Steer Right)
 	private int posInterpolationSteps;
 	private float carYaw;
-	private double wheelYaw;             // Front wheels' yaw
-	private Vec3d speed;                 // Avoid perf loss, don't call this.getVelocity()
 
+	private Vec2f
+		velocity = Vec2f.ZERO,
+		directionUnit = new Vec2f(0.0f, 1.0f),
+		forceTraction,
+		forceDrag,
+		forceRollResistence,
+		forceLongitudinal,
+		acceleration;
+	private float
+		engineForce,
+		speed;
+	private final static float
+		coefificentRollResist = 12f / 20.0f,
+		coeficientDrag = 0.5f / 20.0f,
+		carMass = 100;
 	
 	// Called on summon
 	public Gen1CarEntity(EntityType<?> type, World world) {
@@ -67,11 +81,10 @@ public class Gen1CarEntity extends Entity {
 	@Override
 	public void tick() {
 		super.tick();
-		speed = this.getVelocity();
 		this.posInterpolation();
 		
 		if(this.isLogicalSideForUpdatingMovement()) {
-			this.updateVelocity();
+			//this.updateVelocity();
 			if(this.world.isClient) {
 				// This is where the driving happens
 				this.updateMovement();
@@ -170,7 +183,7 @@ public class Gen1CarEntity extends Entity {
 
 	// XXX I don't know how to physics :(
 	private void updateVelocity() {
-		this.setVelocity(speed = speed.multiply(0.95f, 1.0f, 0.95f).add(0.0f, -0.4f, 0.0f));
+		this.setVelocity(this.getVelocity().multiply(0.95f, 1.0f, 0.95f).add(0.0f, -0.4f, 0.0f));
 	}
 
 	//// This is where you drivv ////
@@ -180,31 +193,20 @@ public class Gen1CarEntity extends Entity {
 			return;
 		}
 		
-		// Gonna yank all of this out
-		float longitudinalInput = 0.0f;
-		if(this.w)
-			longitudinalInput = 0.06f;
-		else if(this.s)
-			longitudinalInput = -0.04f;
-		if(this.a)
-			this.wheelYaw = -3;
-		else if(this.d)
-			this.wheelYaw = 3;
+		if(w)
+			engineForce = 200;
 		else
-			this.wheelYaw = 0.0;
-		if(speed.length() > 0.01)
-			this.yaw += wheelYaw * Math.abs(Math.cos(this.wheelYaw));
-		double sidewaysFriction = 0.05 * MathHelper.cos((float) (yaw - Math.atan2(speed.getX(), -speed.getZ()))) + 0.95 ;
-		speed = speed
-				.add(
-						MathHelper.sin(-this.yaw * 0.017453292f) * longitudinalInput,
-						0.0,
-						MathHelper.cos(this.yaw * 0.017453292f) * longitudinalInput)
-				.multiply(
-						sidewaysFriction,
-						1.0,
-						sidewaysFriction);
-		this.setVelocity(speed);
+			engineForce = 0;
+		forceTraction = new Vec2f(directionUnit.x * engineForce, directionUnit.y * engineForce);
+		forceDrag = new Vec2f(velocity.x * Math.abs(velocity.x) * coeficientDrag * -1, velocity.y * Math.abs(velocity.y) * coeficientDrag * -1);
+		forceRollResistence = new Vec2f(velocity.x * coefificentRollResist * -1, velocity.y * coefificentRollResist * -1);
+		forceLongitudinal = new Vec2f(forceTraction.x + forceDrag.x + forceRollResistence.x, forceTraction.y + forceDrag.y + forceRollResistence.y);
+		acceleration = new Vec2f(forceLongitudinal.x / carMass, forceLongitudinal.y / carMass);
+		double accelX = this.getVelocity().x + acceleration.x;
+		double accelY = this.getVelocity().y;
+		double accelZ = this.getVelocity().x + acceleration.y;
+		velocity = new Vec2f((float)accelX, (float)accelZ);
+		this.setVelocity(accelX, accelY, accelZ);
 	}
 
 	private void posInterpolation() {
