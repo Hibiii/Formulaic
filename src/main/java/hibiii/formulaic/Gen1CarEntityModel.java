@@ -106,7 +106,8 @@ public class Gen1CarEntityModel extends EntityModel<Gen1CarEntity> {
 	}
 	@Override
 	public void setAngles(Gen1CarEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch){
-		//previously the render function, render code was moved to a method below
+		setWheelAngle(this.TyreFL, limbSwing);
+		setWheelAngle(this.TyreFR, limbSwing);
 	}
 	@Override
 	public void render(MatrixStack matrixStack, VertexConsumer	buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha){
@@ -126,6 +127,10 @@ public class Gen1CarEntityModel extends EntityModel<Gen1CarEntity> {
 		bone.pitch = x;
 		bone.yaw = y;
 		bone.roll = z;
+	}
+	
+	private static void setWheelAngle(ModelPart part, float angle) {
+		part.yaw = angle;
 	}
 
 }

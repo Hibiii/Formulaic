@@ -10,6 +10,9 @@ import org.jetbrains.annotations.Nullable;
 
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MovementType;
@@ -28,6 +31,8 @@ import net.minecraft.world.World;
 // So you have chosen :concern:
 public class Gen1CarEntity extends Entity {
 
+	private static final TrackedData<Float> FRONT_WHEEL_YAW;
+	
 	private double x, y, z;
 	private boolean w, a, s, d;          // Input (Power, Steer Left, Brake, Steer Right)
 	private int posInterpolationSteps;
@@ -48,6 +53,7 @@ public class Gen1CarEntity extends Entity {
 		coefificentRollResist = 12f / 20.0f,
 		coeficientDrag = 0.5f / 20.0f,
 		carMass = 100;
+	private float wheelYaw = 0.0f;
 	
 	// Called on summon
 	public Gen1CarEntity(EntityType<?> type, World world) {
@@ -139,7 +145,7 @@ public class Gen1CarEntity extends Entity {
 
 	@Override
 	protected void initDataTracker() {
-
+		this.dataTracker.<Float>startTracking(Gen1CarEntity.FRONT_WHEEL_YAW, 0.0f);
 	}
 
 	@Override
@@ -174,6 +180,10 @@ public class Gen1CarEntity extends Entity {
 		this.posInterpolationSteps = 10;
 	}
 
+	@Environment(EnvType.CLIENT)
+	public float getFrontWheelYaw() {
+		return wheelYaw;
+	}
 	public void setInputs(boolean pressingLeft, boolean pressingRight, boolean pressingForward, boolean pressingBack) {
 		w = pressingForward;
 		a = pressingLeft;
@@ -226,6 +236,10 @@ public class Gen1CarEntity extends Entity {
 			this.updatePosition(d, e, f);
 			this.setRotation(this.yaw, this.pitch);
 		}
+	}
+	
+	static {
+		FRONT_WHEEL_YAW = DataTracker.<Float>registerData(Gen1CarEntity.class, TrackedDataHandlerRegistry.FLOAT);
 	}
 
 }

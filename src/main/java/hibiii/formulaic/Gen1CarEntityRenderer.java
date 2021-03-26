@@ -37,6 +37,7 @@ public class Gen1CarEntityRenderer extends EntityRenderer<Gen1CarEntity> {
 		matrixStack.push();
 		matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180.0f - yaw));
 		VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(model.getLayer(new Identifier("formulaic", "textures/entity/prototype_car.png")));
+		model.setAngles(prototypeCarEntity, prototypeCarEntity.getFrontWheelYaw(), 0, 0, yaw, 0);
 		model.render(matrixStack, vertexConsumer, i, OverlayTexture.DEFAULT_UV, 1.0f, 1.0f, 1.0f, 1.0f);
 		matrixStack.pop();
 		super.render(prototypeCarEntity, yaw, delta, matrixStack, vertexConsumerProvider, i);
