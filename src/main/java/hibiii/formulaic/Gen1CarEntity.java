@@ -37,23 +37,13 @@ public class Gen1CarEntity extends Entity {
 	private boolean w, a, s, d;          // Input (Power, Steer Left, Brake, Steer Right)
 	private int posInterpolationSteps;
 	private float carYaw;
-
-	private Vec2f
-		velocity = Vec2f.ZERO,
-		directionUnit = new Vec2f(0.0f, 1.0f),
-		forceTraction,
-		forceDrag,
-		forceRollResistence,
-		forceLongitudinal,
-		acceleration;
-	private float
-		engineForce,
-		speed;
-	private final static float
-		coefificentRollResist = 12f / 20.0f,
-		coeficientDrag = 0.5f / 20.0f,
-		carMass = 100;
 	private float wheelYaw = 0.0f;
+	private float velocityDecay = 0.9f;
+	private float accel = 0.0f;
+	private double speedI;
+	private double speedJ;
+	private double speedX;
+	private double speedZ;
 	
 	// Called on summon
 	public Gen1CarEntity(EntityType<?> type, World world) {
@@ -82,7 +72,7 @@ public class Gen1CarEntity extends Entity {
 		packet.writeUuid(getUuid());
 		return ServerSidePacketRegistry.INSTANCE.toPacket(Formulaic.CAR_SPAWN_PACKET, packet);
 	}
-
+	
 	//// Tick ////
 	@Override
 	public void tick() {
@@ -191,32 +181,54 @@ public class Gen1CarEntity extends Entity {
 		d = pressingRight;
 	}
 
-	// XXX I don't know how to physics :(
-	private void updateVelocity() {
-		this.setVelocity(this.getVelocity().multiply(0.95f, 1.0f, 0.95f).add(0.0f, -0.4f, 0.0f));
-	}
-
 	//// This is where you drivv ////
-	// TODO: Current physics calculations are *too* slidey, do a poll maybe?
 	private void updateMovement() {
-		if (!this.hasPassengers()) {
-			return;
+		double double4 = this.hasNoGravity() ? 0.0 : -0.04;
+		
+		// Player Input
+		accel = 0.0f;
+		if(w)
+			accel += 0.04f;
+		if(s)
+			accel -= 0.005f;
+		if(a & ! d)
+			wheelYaw += 0.09f;
+		else if (d & !a)
+			wheelYaw -= 0.09f;
+		else {
+			if(wheelYaw > 0.06f)
+				wheelYaw -=0.04f;
+			else if(wheelYaw < -0.06f)
+				wheelYaw += 0.04f;
+			else
+				wheelYaw = 0.0f;
+		}
+		if(wheelYaw > 0.2f)
+			wheelYaw = 0.2f;
+		else if (wheelYaw < -0.2f)
+			wheelYaw = -0.2f;
+		
+		// Calculate forces and car-relative speed
+		double accelI = accel * Math.cos(wheelYaw);
+		speedI += accelI;
+		speedJ = speedI * Math.sin(wheelYaw);
+		
+		// Calculate world-relative speed
+		speedX = speedI * Math.sin(yaw) + speedJ * Math.cos(yaw);
+		speedZ = speedI * Math.cos(yaw) + speedJ * Math.sin(yaw);
+
+		// Calculate world-relative yaw
+		if(Math.abs(speedI) > 0.1) {
+			Vec3d oldVelocity = this.getVelocity();
+			if(oldVelocity.x != speedX && speedX != 0d) {
+				float gah = (float) ((wheelYaw + speedI)/speedI) - 1f;
+				System.out.println(gah);
+				this.yaw = (this.yaw + gah * 57.29578f)/2f;
+			}
 		}
 		
-		if(w)
-			engineForce = 200;
-		else
-			engineForce = 0;
-		forceTraction = new Vec2f(directionUnit.x * engineForce, directionUnit.y * engineForce);
-		forceDrag = new Vec2f(velocity.x * Math.abs(velocity.x) * coeficientDrag * -1, velocity.y * Math.abs(velocity.y) * coeficientDrag * -1);
-		forceRollResistence = new Vec2f(velocity.x * coefificentRollResist * -1, velocity.y * coefificentRollResist * -1);
-		forceLongitudinal = new Vec2f(forceTraction.x + forceDrag.x + forceRollResistence.x, forceTraction.y + forceDrag.y + forceRollResistence.y);
-		acceleration = new Vec2f(forceLongitudinal.x / carMass, forceLongitudinal.y / carMass);
-		double accelX = this.getVelocity().x + acceleration.x;
-		double accelY = this.getVelocity().y;
-		double accelZ = this.getVelocity().x + acceleration.y;
-		velocity = new Vec2f((float)accelX, (float)accelZ);
-		this.setVelocity(accelX, accelY, accelZ);
+		// Apply speed world-relative
+		this.setVelocity(speedX, this.getVelocity().y + double4, speedZ);
 	}
 
 	private void posInterpolation() {
